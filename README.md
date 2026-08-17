@@ -83,16 +83,6 @@ You should see the CoWork chat interface — a clean conversational window ready
 
 In the chat, select the **Mosaic Retail** agent. This agent is connected to your retail dataset and understands your business vocabulary — categories, subcategories, suppliers, stores, and channels.
 
-### Step 4: Warm Up
-
-Type your first question:
-
-```
-What data do I have access to?
-```
-
-CoWork responds with a summary of available data: sales transactions, product catalog, supplier info, and store details. This confirms everything is working.
-
 ---
 
 ## Platform Principles
@@ -104,210 +94,144 @@ Before we begin, these are the enduring ideas you should carry forward:
 - **One agent, full business context.** CoWork combines structured tables, unstructured documents, and external context in a single conversational experience. No tool-switching, no context loss between systems.
 - **Cost is observable.** Every CoWork interaction consumes Cortex AI credits. Your admin can monitor usage via `SNOWFLAKE.ACCOUNT_USAGE` views — no surprise bills, full attribution by user and role.
 
-> These principles apply to every Snowflake AI capability, not just CoWork. They are the architectural foundation that makes enterprise AI deployable at scale.
+---
+
+## Act 1: Spot the Problem (~10 min)
+
+> **Business Context:** Jordan's buyer meeting is at 2pm. First instinct: how did my category do last week? In the old world, this means opening a dashboard, checking filters, then filing a ticket for any follow-up. With CoWork, it's a conversation.
+
+Each question in this section introduces a different CoWork capability. Pay attention to the feature callout after each one.
 
 ---
 
-## Act 1: Let Me Check the Numbers (~5 min)
-
-> **Business Context:** Jordan's buyer meeting is at 2pm. First instinct: how did my category do last week? In the old world, this means opening a dashboard and hoping the filters are right. With CoWork, it's a question.
-
----
-
-### Q1
+### Q1 — Natural Language Q&A + Verified Answers
 
 ```
 How did Home & Kitchen perform last week?
 ```
 
-**What to expect:** A total revenue number for the most recent week (Aug 25-31). This sets the baseline — Jordan sees a number but doesn't yet know if it's good or bad.
+**What to expect:** A total revenue number for Aug 25-31, with a comparison to the prior period.
 
-> **Verified Answers:** Look for the green shield icon next to the response. This indicates a **Verified Answer** — a metric backed by a curated, data-team-approved definition.
->
-> | Signal | Meaning |
-> |--------|---------|
-> | Green shield | This metric uses a curated, data-team-approved definition and calculation |
-> | No shield | CoWork reasoned from the data schema — still accurate, but not pre-validated by your data team |
->
-> When your CFO asks "where did that number come from?", the green shield means it uses the exact calculation your organisation agreed on.
+**New feature — Verified Answers:** Look for the green shield icon next to the response. This indicates a metric backed by a curated, data-team-approved definition — not just AI reasoning, but an organisation-agreed calculation.
 
----
+| Signal | Meaning |
+|--------|---------|
+| Green shield | Uses a curated, data-team-approved definition |
+| No shield | CoWork reasoned from the data schema — accurate, but not pre-validated |
 
-### Q2
-
-```
-How does that compare to the week before?
-```
-
-**What to expect:** A week-over-week comparison — something like "-8% vs prior week." The problem is now visible. Notice how CoWork maintains context from Q1 without you needing to re-specify "Home & Kitchen."
+> *Instructor: "The green shield is what lets you put this number in a board deck with confidence."*
 
 ---
 
-### Q3
+### Q2 — Conversational Context (Follow-ups)
 
 ```
 Which subcategory drove the decline?
 ```
 
-**What to expect:** A breakdown showing Kitchen Appliances as the clear underperformer while other subcategories (Cookware, Home Decor, etc.) are flat or slightly up. Jordan's attention is now focused.
+**What to expect:** A breakdown showing Kitchen Appliances as the underperformer. Other subcategories are flat or slightly up.
+
+**New feature — Conversational context:** Notice you didn't re-specify "Home & Kitchen" or "last week." CoWork maintains the thread context — each question builds on the prior answer, just like talking to a colleague.
 
 ---
 
-### Q4
+### Q3 — Auto-Visualization (Trend Line Chart)
 
 ```
-Show me Kitchen Appliances revenue by week for the past 8 weeks as a line chart
+Show me Kitchen Appliances revenue by week for the past 8 weeks
 ```
 
-**What to expect:** A line chart with weeks of steady/growing revenue, then a visible drop. This is the visual "something broke" moment.
+**What to expect:** A line chart showing steady/growing revenue, then a visible drop in recent weeks. The visual "something broke" moment.
 
-> *Instructor: "Notice the shape — steady growth, then a break. Something happened recently. Let's find out what."*
+**New feature — Auto-visualization:** CoWork generates the chart automatically — you didn't specify "line chart." The agent infers that a time-series question should produce a trend visualization. (Comparisons get bar charts, distributions get pie charts.)
 
-> **Auto-visualization:** CoWork generates charts automatically based on your question. Trends get line charts, comparisons get bar charts, distributions get pie charts. You can also request a specific chart type — like "as a line chart" above. See [CoWork visualizations documentation](https://docs.snowflake.com/en/user-guide/snowflake-cowork/using-cowork#visualizations).
+> *Instructor: "Notice the shape — steady growth, then a break. Something happened. Let's find out what."*
+
+**Save as Artifact:** Click the **Save as Artifact** button on this chart. Name it `KA Weekly Trend`. You'll use it in your meeting brief later.
+
+> **What are Artifacts?** Any chart, table, or report can be saved to your Artifacts panel (left sidebar). They persist, are shareable, and are revisitable without regenerating.
 
 ---
 
-### Save Your First Artifact
-
-Click the **Save as Artifact** button on the chart. Name it:
+### Q4 — Chart Customization + Cross-Table Reasoning
 
 ```
-KA Weekly Trend
+Which products in Kitchen Appliances declined the most? Show as a horizontal bar chart sorted by revenue decline
 ```
 
-The chart is now saved to your Artifacts panel (left sidebar) for quick reference later.
+**What to expect:** A horizontal bar chart ranking products by decline. The top decliners are all Apex Kitchen Co products (BrewMaster 360, SmartToast Pro, QuickBoil Kettle).
 
-> **What are Artifacts?** Any chart, table, or report CoWork generates can be saved as an Artifact. They persist in your workspace, are shareable with colleagues (within their access permissions), and are revisitable without regenerating the analysis. See [Artifacts documentation](https://docs.snowflake.com/en/user-guide/snowflake-cowork/using-cowork#artifacts).
+**New feature — Chart customization:** You specified the chart type ("horizontal bar") and the sort order ("sorted by revenue decline"). CoWork respects your visualization preferences. You can always override the auto-generated format.
+
+**New feature — Cross-table reasoning:** This answer required joining daily_sales with products to get product names and grouping by revenue change. CoWork navigated multiple tables without you needing to know the schema.
 
 ---
 
-## Act 2: The Detective Work (~10 min)
+### Q5 — Multi-Table Joins + Root Cause
 
-> **Business Context:** The numbers say "something broke." But "sales are down" isn't a negotiating position for a buyer meeting. Jordan needs the root cause: which products, which supplier, how much revenue is at risk. In the old world, this is three separate analyst tickets across 2-3 days. With CoWork, it's three follow-up questions.
+```
+What supplier are those products from, and do they have any delivery delays recorded?
+```
+
+**What to expect:** "Apex Kitchen Co — 9 days delayed, starting August 25, expected resolution September 8." Root cause confirmed in one question.
+
+**New feature — Multi-table joins in a single question:** This answer required linking products → suppliers → delivery status. CoWork traversed three tables and returned a synthesized answer. In the old world, this is three separate queries and a manual cross-reference.
+
+> *Instructor: "Four questions to go from 'revenue is down' to 'here's the exact supplier, the exact start date, and the expected fix date.' This is what used to be a 3-day analyst request."*
 
 ---
 
-### Q5
-
-```
-Which products in Kitchen Appliances declined the most last week? Show as a bar chart sorted by decline
-```
-
-**What to expect:** A bar chart ranking products by revenue decline. The top 3-4 decliners are all Apex Kitchen Co products (BrewMaster 360, SmartToast Pro, QuickBoil Kettle). ProBlend 9000 and non-Apex products are absent from the decline list.
-
-> **Chart customization:** Adding "show as a bar chart sorted by decline" gives you control over the visualization. You can always ask CoWork to change chart types, add labels, sort differently, or switch to a table format — all in natural language.
-
----
-
-### Q6
-
-```
-What supplier are those products from?
-```
-
-**What to expect:** "Apex Kitchen Co" — all the declining products come from a single supplier. The pattern clicks. Notice the conversational context: CoWork knows "those products" refers to the decliners from Q5.
-
----
-
-### Q7
-
-```
-Does Apex Kitchen Co have any delivery delays?
-```
-
-**What to expect:** "Yes — 9 days delayed, starting August 25, expected resolution September 8." The root cause is confirmed. The dates align perfectly with the revenue dip.
-
-> *Instructor: "Three questions to go from 'revenue is down' to 'here's the exact supplier, the exact start date, and the expected fix date.' This is what used to be a 3-day analyst request."*
-
----
-
-### Q8
-
-```
-How much revenue did we lose from Apex products last week vs their 4-week average?
-```
-
-**What to expect:** A specific dollar figure — the revenue gap. This is the number Jordan puts on the meeting slide. It quantifies the problem for the buyer negotiation.
-
----
-
-## Act 3: But What's Working? (~5 min)
+## Act 2: Find the Opportunity (~10 min)
 
 > **Business Context:** Good category managers don't just bring problems to buyer meetings — they bring opportunities. Jordan needs a growth story to pair with the supply disruption. "We're losing money here, but here's where we should invest" is a complete narrative.
 
 ---
 
-### Q9
+### Q6 — Multi-Series Comparison Chart
 
 ```
-Despite this, are any Kitchen Appliances products still growing?
+Compare ProBlend 9000 and ProBlend 5000 weekly revenue since June as a line chart
 ```
 
-**What to expect:** ProBlend 9000 surfaces at or near the top. The framing "despite this" keeps the conversation in context. Jordan pivots from problem to opportunity.
+**What to expect:** A multi-series line chart with two lines: PB9000 ramping up, PB5000 gently declining. The crossover point tells the story visually.
+
+**New feature — Multi-series comparison:** By naming two products in one question, you get them overlaid on the same chart. You can compare any dimensions this way — products, stores, channels, time periods.
+
+> *Instructor: "You can iterate further — 'add ProBlend 3000 to that' or 'change to monthly' — all in natural language."*
 
 ---
 
-### Q10
+### Q7 — Pie Chart + Channel Analysis
 
 ```
-Show me ProBlend 9000 weekly revenue since launch as a line chart
+What's the channel split for ProBlend 9000? Show as a pie chart
 ```
 
-**What to expect:** A line chart showing 13 weeks of consistent growth since the June 2 launch. Steady, organic growth curve — the opposite shape to the Kitchen Appliances dip from Q4.
+**What to expect:** A pie/donut chart: ~62% Online, ~28% In-Store, ~10% Click-and-Collect. ProBlend 9000 is winning in the fastest-growing channel.
+
+**New feature — Explicit chart type request:** You asked for a pie chart and got one. CoWork wouldn't auto-generate a pie chart for this question (it would likely default to a table), but respects your explicit preference.
 
 ---
 
-### Q10b: Iterate on the Chart
+### Q8 — Analytical Reasoning
 
 ```
-Add ProBlend 5000 to that chart for comparison
+Is ProBlend 9000 cannibalizing ProBlend 5000, or is the total blender category growing?
 ```
 
-**What to expect:** A multi-series line chart with two lines: PB9000 ramping up, PB5000 gently declining. The crossover point tells the cannibalization story visually.
+**What to expect:** A nuanced answer: "ProBlend 5000 has declined ~2-3% per month since June, but ProBlend 9000 more than compensates — the total blender category is growing." This requires the agent to reason about net impact, not just pull a single metric.
 
-> *Instructor: "You can iterate on charts — add series, change time ranges, switch chart types — all in natural language."*
+**New feature — Analytical reasoning:** This isn't a metric lookup — it's a judgment question that requires comparing two trends and drawing a conclusion. CoWork can reason across data, not just retrieve it.
 
----
-
-### Save Your Second Artifact
-
-Click **Save as Artifact** on the comparison chart. Name it:
-
-```
-ProBlend 9000 vs 5000 Trend
-```
-
-You now have two saved artifacts: the KA decline story and the PB9000 growth story — the two pillars of your meeting brief.
-
----
-
-### Q11
-
-```
-What percentage of ProBlend 9000 sales are online vs in-store? Show as a pie chart
-```
-
-**What to expect:** A pie/donut chart showing ~62% Online, ~28% In-Store, ~10% Click-and-Collect. This reinforces why PB9000 is winning — it dominates the fastest-growing channel.
-
----
-
-### Q12
-
-```
-Is ProBlend 9000 cannibalizing ProBlend 5000?
-```
-
-**What to expect:** "ProBlend 5000 has declined ~2-3% per month since June." The upgrade path is real, but the total blender category is still growing because the 9000 more than compensates.
-
-> *Instructor: "You now have two complete stories for your 2pm meeting: a fire to address (Apex) and an opportunity to propose (increase the ProBlend 9000 buy). All from one conversation, no SQL, no analyst ticket."*
+> *Instructor: "You now have two stories for your meeting: a fire to address (Apex) and an opportunity to propose (increase the ProBlend 9000 buy). All from one conversation."*
 
 ---
 
 ## Deep Research (~10 min)
 
-> **Business Context:** Jordan has the "what" — now they need the "why" at a depth suitable for a formal recommendation. "Sales are down" isn't a negotiating position. "Sales are down because of a 9-day supply disruption at our third-largest supplier, with $X at risk if it slips, and here's the evidence for activating backup sourcing" — that's a negotiating position. Deep Research produces that level of insight in minutes, not days.
+> **Business Context:** Jordan has the "what" — now they need a formal recommendation at a depth suitable for a buyer meeting. Deep Research produces multi-page cited reports in minutes, not days.
 
-### When to Use Deep Research
+### When to Use Deep Research vs Standard Chat
 
 | Use Deep Research when... | Use standard chat when... |
 |--------------------------|--------------------------|
@@ -320,7 +244,7 @@ See [Deep Research documentation](https://docs.snowflake.com/en/user-guide/snowf
 
 ---
 
-### Q13
+### Q9 — Deep Research (Multi-Agent Investigation)
 
 Click the **+ button** in the message bar, then select **Deep Research**. Type:
 
@@ -328,95 +252,75 @@ Click the **+ button** in the message bar, then select **Deep Research**. Type:
 Investigate the Apex Kitchen Co supply disruption's impact on Kitchen Appliances. Quantify the total revenue loss, identify which products and stores were most affected, and recommend whether we should activate a backup supplier or wait for resolution on September 8.
 ```
 
-**What to expect:** Deep Research decomposes your question into 3-5 sub-investigations and runs them in parallel. You'll see progress updates as it works. This takes 3-5 minutes.
+**What to expect:** Deep Research decomposes your question into 3-5 sub-investigations and runs them in parallel. This takes 3-5 minutes.
 
 The final report includes:
-- Total revenue loss quantified (~$X over the disruption period)
+- Total revenue loss quantified
 - Products ranked by impact
 - Stores most affected
 - A "wait vs. diversify" recommendation backed by data
-- Revenue-at-risk calculation if the Sep 8 resolution slips
+- Revenue-at-risk calculation if Sep 8 slips
 
-Every finding is cited — click any reference number to see the underlying data query.
+**New feature — Deep Research:** Unlike standard chat (single query → single answer), Deep Research runs a multi-agent investigation: it decomposes the question, executes parallel sub-queries, synthesizes findings, and produces a cited report. Every claim has a reference you can click to see the underlying query.
 
-> *Instructor (while Deep Research runs): "Watch the progress indicator — you can see CoWork decomposing the question into sub-investigations and running them in parallel. This is the kind of analysis that normally takes a business analyst 2-3 days. Every number in the final report traces back to a query you can audit."*
-
----
-
-### Save and Pin the Report
-
-1. Click **Save as Artifact** on the completed report. Name it:
-
-```
-Apex Kitchen Co Impact Analysis — Aug 2026
-```
-
-2. Open the Artifacts panel (left sidebar). Find the report and click **Pin**. Pinned artifacts are discoverable by other CoWork users in your organisation.
-
-> *Instructor: "This saves the full document — not just the summary, but every chart and citation. Pinning makes it findable by your team without you needing to forward it."*
+> *Instructor (while it runs): "Watch the progress indicator — you can see sub-investigations running in parallel. This is the kind of analysis that normally takes a business analyst 2-3 days."*
 
 ---
 
-### Q13b (Optional)
+### Save, Pin, and Refine
+
+1. **Save:** Click **Save as Artifact** on the report → name it `Apex Kitchen Co Impact Analysis — Aug 2026`
+
+2. **Pin:** Open the Artifacts panel → click **Pin** on the report. Pinned artifacts are discoverable by other CoWork users in your org.
+
+3. **Refine (Q9b):**
 
 ```
 From that research, show me a bar chart of revenue loss by product
 ```
 
-**What to expect:** A clean bar chart extracted from the research findings, showing per-product revenue impact. Demonstrates that you can pull specific visuals from a completed Deep Research report.
+**New feature — Extract visuals from research:** You can pull specific charts out of a Deep Research report by asking for them. The full report context is maintained.
 
 ---
 
 ## Take Action (~10 min)
 
-> **Business Context:** Analysis without action is just trivia. Jordan's buyer meeting is in 2 hours. They need to share the decline analysis with their merchandise planning team and prepare a structured brief — all without leaving CoWork.
+> **Business Context:** Analysis without action is just trivia. Jordan's buyer meeting is in 2 hours. It's time to package findings and share with the team.
 
 ---
 
-### Q14
+### Q10 — Synthesis (Meeting Brief Generation)
 
 ```
 Summarise my key findings for the buyer meeting in two sections: first, the Apex supply disruption and its impact; second, the ProBlend 9000 growth case and my recommendation to increase the Q4 buy.
 ```
 
-**What to expect:** A clean, structured brief:
+**What to expect:** A structured brief with two clear sections, each with bullet points and a recommendation. CoWork synthesizes everything from the conversation — Q1 through Q9 — into a presentation-ready format.
 
-> **1. Apex Kitchen Co — Supply Disruption**
-> - Revenue impact: -$X last week (-8% WoW in Kitchen Appliances)
-> - Root cause: 9-day delivery delay from Aug 25, affecting 4 products
-> - Expected resolution: Sep 8. Revenue-at-risk if it slips: $Y/week
-> - Recommendation: Monitor through Sep 8; if unresolved, activate backup sourcing
->
-> **2. ProBlend 9000 — Growth Opportunity**
-> - +100% revenue growth since June launch, consistent weekly ramp
-> - 62% online channel (our fastest-growing channel)
-> - Mild cannibalization of ProBlend 5000 (-2-3% MoM) but net category positive
-> - Recommendation: Increase Q4 buy by 40%
+**New feature — Synthesis from full conversation:** CoWork uses the entire thread context to generate a summary. You didn't need to re-state any facts — it pulled from all prior answers, including the Deep Research report.
 
 ---
 
-### Q15
+### Q11 — MCP Connector (Share to Slack)
 
 ```
 Share the Apex impact analysis to the #merch-planning Slack channel with the note: "Prep for 2pm — Apex supply impact attached. Two decisions needed: (1) backup supplier activation, (2) ProBlend Q4 allocation increase."
 ```
 
-**What to expect:** CoWork uses the MCP Slack connector to compose a message, shows you a preview, and asks for confirmation before sending. Your team arrives at 2pm having already read the brief.
+**What to expect:** CoWork composes a Slack message, shows you a preview, and asks for confirmation before sending. Your team arrives at 2pm having already read the brief.
 
-> **MCP Connectors:** CoWork connects to external tools via the [Model Context Protocol](https://docs.snowflake.com/en/user-guide/snowflake-cowork/using-cowork#mcp-connectors). Your admin configures which connectors are available:
->
-> | Connector | Actions |
-> |-----------|---------|
-> | **Slack** | Send messages, post to channels, share artifacts |
-> | **Gmail** | Compose and send emails with data summaries |
-> | **Jira** | Create tickets, update issues |
-> | **Salesforce** | Log activities, update records |
->
-> You don't need to switch apps. The action happens from within your data conversation.
+**New feature — MCP Connectors:** CoWork connects to external tools via the [Model Context Protocol](https://docs.snowflake.com/en/user-guide/snowflake-cowork/using-cowork#mcp-connectors). Actions happen from within your data conversation — no app-switching.
+
+| Connector | Actions |
+|-----------|---------|
+| **Slack** | Send messages, post to channels, share artifacts |
+| **Gmail** | Compose and send emails with data summaries |
+| **Jira** | Create tickets, update issues |
+| **Salesforce** | Log activities, update records |
 
 ---
 
-## Bonus: Create a User Skill
+## Bonus: User Skills (Automation)
 
 You do this kind of Monday morning analysis every week. Instead of repeating the same questions, capture the workflow as a **User Skill** — a personal, reusable multi-step command.
 
@@ -428,21 +332,15 @@ Create a skill called "Monday Category Review" that does the following:
 4. Summarize findings in bullet points ready for my team standup
 ```
 
-Next Monday, you simply say:
+Next Monday, you simply say: `Run my Monday Category Review skill`
 
-```
-Run my Monday Category Review skill
-```
-
-And get the same multi-step analysis in seconds.
-
-> **User Skills** are personal, reusable workflows saved to your workspace. They run with your data access and can be triggered by name in any conversation. See [User Skills documentation](https://docs.snowflake.com/en/user-guide/snowflake-cowork/using-cowork#user-skills).
+**New feature — User Skills:** Personal, reusable workflows saved to your workspace. They run with your data access and can be triggered by name. See [User Skills documentation](https://docs.snowflake.com/en/user-guide/snowflake-cowork/using-cowork#user-skills).
 
 ---
 
 ## Bonus: Governance Demo
 
-> *This is an instructor-led demonstration. Participants watch on the projector.*
+> *Instructor-led demonstration. Participants watch on the projector.*
 
 The instructor asks the same question using two different roles:
 
@@ -453,11 +351,11 @@ What is total revenue across all departments this year?
 | Role | Result |
 |------|--------|
 | HOL_ATTENDEE_ROLE | Returns only Home & Kitchen |
-| COMMERCIAL_DIRECTOR_ROLE | Returns all four departments (Home & Kitchen, Electronics, Outdoor & Garden, Sports & Fitness) |
+| COMMERCIAL_DIRECTOR_ROLE | Returns all four departments |
 
 > *"Same agent, same question, same data. The only difference is the role. Jordan sees their world. The Commercial Director sees everything. No one configured this per-agent — it's inherited from the row access policy your admin already set up."*
 
-This is what "governance travels with the data" means in practice. CoWork doesn't rebuild security — it inherits it. See [Row Access Policies documentation](https://docs.snowflake.com/en/user-guide/security-row-intro).
+**New feature — Row-Level Security inheritance:** CoWork doesn't have its own security model. It inherits whatever RBAC and row access policies your admin already configured in Snowflake. See [Row Access Policies documentation](https://docs.snowflake.com/en/user-guide/security-row-intro).
 
 ---
 
@@ -474,11 +372,13 @@ GROUP BY USER_NAME
 ORDER BY TOTAL_CREDITS DESC;
 ```
 
-Key points for customer conversations:
+Key points:
 - Every interaction is metered and attributable to a specific user and role
 - Admins can set budgets and alerts using Snowflake's standard cost governance
 - Deep Research consumes more credits than standard Q&A (multiple sub-queries)
 - No opaque per-seat licensing — you pay for what you use
+
+See [Cortex AI Usage History](https://docs.snowflake.com/en/sql-reference/account-usage/cortex_ai_functions_usage_history).
 
 ---
 
@@ -526,37 +426,32 @@ If you can answer all four, the lab has done its job.
 
 | Time | What You Did | Traditional Equivalent |
 |------|-------------|----------------------|
-| 5 min | Logged in, oriented, asked first question | Check a dashboard (limited) |
-| 5 min | Identified the decline and visualized it | Email analyst, wait 1-2 days |
-| 10 min | Root cause investigation across products/suppliers | Analyst project (2-3 days) |
-| 5 min | Found the growth opportunity, compared products | Second analyst request |
-| 10 min | Deep Research cited report | Analyst + Business Analyst (3-5 days) |
-| 10 min | Meeting brief, shared via Slack, created a skill | Manual email/Slack + repeat effort weekly |
+| 5 min | Logged in, oriented, selected agent | Find the right dashboard, check filters |
+| 10 min | Identified the decline, found root cause | 2-3 analyst requests (2-5 days) |
+| 10 min | Found growth story, analysed channels | Second analyst request |
+| 10 min | Deep Research cited report | Analyst + BA project (3-5 days) |
+| 10 min | Meeting brief, shared via Slack | Manual email/Slack + repeat effort weekly |
 | **~45 min** | **Full Monday morning workflow** | **1-2 weeks of analyst time** |
 
-### CoWork Features Covered
+### Feature Coverage
 
-| Feature | Where |
-|---------|-------|
-| Natural language Q&A | Q1-Q12 |
-| Verified Answers (green shield) | Q1 |
-| Conversational context (follow-ups) | Q2, Q3, Q6, Q10b |
-| Auto-visualization (line chart) | Q4, Q10, Q10b |
-| Auto-visualization (bar chart) | Q5, Q13b |
-| Auto-visualization (pie/donut) | Q11 |
-| Chart customization | Q5 (sort), Q11 (type), Q10b (add series) |
-| Artifacts (save) | After Q4, Q10b, Q13 |
-| Artifacts (pin to homepage) | After Q13 |
-| Deep Research | Q13 |
-| Summary/synthesis | Q14 |
-| MCP Connector (Slack) | Q15 |
-| User Skills (automation) | Bonus |
-| Row-Level Security | Governance demo |
-| Cost observability | Cost section (admin reference) |
+Each question introduced exactly one new CoWork capability:
 
-### Customer Proof
-
-> **Fanatics Betting & Gaming:** 80% of their customer experience organisation uses CoWork weekly. They save 3+ hours per person per week, with 3 agents in production.
+| # | Prompt | Feature Taught |
+|---|--------|---------------|
+| Q1 | "How did H&K perform last week?" | Natural language Q&A + Verified Answers |
+| Q2 | "Which subcategory drove the decline?" | Conversational context (follow-ups) |
+| Q3 | "Show me KA revenue by week for 8 weeks" | Auto-visualization (line chart) |
+| Q4 | "Which products declined most? Show as bar chart sorted by decline" | Chart customization + cross-table reasoning |
+| Q5 | "What supplier, and any delivery delays?" | Multi-table joins in one question |
+| Q6 | "Compare PB9000 and PB5000 weekly since June" | Multi-series comparison chart |
+| Q7 | "Channel split for PB9000? Pie chart" | Explicit chart type override |
+| Q8 | "Is PB9000 cannibalizing PB5000?" | Analytical reasoning (not just retrieval) |
+| Q9 | Deep Research: Apex impact investigation | Multi-agent cited research |
+| Q10 | "Summarise findings for my buyer meeting" | Synthesis from full conversation |
+| Q11 | "Share to #merch-planning Slack" | MCP Connector (external action) |
+| Bonus | "Create a skill called Monday Category Review" | User Skills (automation) |
+| Bonus | Same question, different role | Row-Level Security inheritance |
 
 ---
 
@@ -586,12 +481,11 @@ If you can answer all four, the lab has done its job.
 
 ## Pacing Notes for Instructors
 
-- **Getting Started:** Keep tight. Participants should be typing Q1 within 3-4 minutes of sitting down.
-- **Act 1 (Q1-Q4):** Fast. Each question answers in <10 seconds. Let the speed speak for itself. Don't over-explain.
-- **Act 2 (Q5-Q8):** Detective pace. Slightly slower — let attendees read the product names and notice the Apex pattern across multiple products.
-- **Act 3 (Q9-Q12):** Mood shift from problem to opportunity. The growth chart is the "smile" moment.
-- **Deep Research (Q13):** Takes 3-5 minutes. Use the wait time to explain multi-agent decomposition. Don't fill awkward silence — let them watch the progress indicator.
-- **Take Action (Q14-Q15):** Fast wrap. "Meeting prep done. Before lunch. Without writing SQL or filing a ticket."
+- **Getting Started:** Keep tight — participants should be typing Q1 within 3-4 minutes.
+- **Act 1 (Q1-Q5):** Fast. Each question answers in <10 seconds. Emphasize the "New feature" callout after each one. The detective arc builds naturally.
+- **Act 2 (Q6-Q8):** Mood shift from problem to opportunity. The multi-series chart is the visual "aha."
+- **Deep Research (Q9):** Takes 3-5 minutes. Use the wait time to explain multi-agent decomposition. Don't fill silence — let them watch the progress indicator.
+- **Take Action (Q10-Q11):** Fast wrap. "Meeting prep done. Before lunch. Without writing SQL or filing a ticket."
 - **Governance Demo:** Instructor-led. Have both roles ready. The role switch should be dramatic — same question, visibly different results.
 
 ---
